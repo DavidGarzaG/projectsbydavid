@@ -1,0 +1,21 @@
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# Environments
+.env
+
+# Streamlit
+.streamlit/secrets.toml
+
+# Current folders I don't want in the commit
+aws-api-key/
+chroma_langchain_db/
+Eco_Elevadores_PVE/
+eco_elevadores_pdf/
+
+# For now...
+.json
+*.ipynb
+
+# Mac things
+.DS_Store
