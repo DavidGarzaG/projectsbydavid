@@ -17,5 +17,8 @@ eco_elevadores_pdf/
 .json
 *.ipynb
 
+# Private key
+*.pem
+
 # Mac things
 .DS_Store
