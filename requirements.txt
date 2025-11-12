@@ -1,3 +1,13 @@
-mediapipe==0.10.21
+# Necessary for the application
+av
+opencv-python
+streamlit
+numpy==1.26.4
+mediapipe==0.10.18
 streamlit-pdf==1.0.8
 streamlit-webrtc==0.63.11
+# Linting
+ruff==0.11.12
+pyright==1.1.401
+# For commits
+pre_commit==4.2.0
