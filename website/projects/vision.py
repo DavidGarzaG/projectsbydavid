@@ -1,3 +1,4 @@
+import os
 import av
 import cv2
 import numpy as np
@@ -56,7 +57,7 @@ def draw_landmarks_on_image(rgb_image, detection_result):
   return annotated_image
 
 
-base_options = python.BaseOptions(model_asset_path='static/hand_landmarker.task')
+base_options = python.BaseOptions(model_asset_path=os.path.join(os.getcwd(), "website", "static", "hand_landmarker.task"))
 options = vision.HandLandmarkerOptions(base_options=base_options,
                                        num_hands=2, 
                                        running_mode=vision.RunningMode.IMAGE)

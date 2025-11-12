@@ -12,6 +12,6 @@ with st.container(border = True):
         """)
     
 st.subheader("Here is my latest Resume")
-st.pdf(os.path.join(os.getcwd(), "static", "Resume.pdf"), height=830)
+st.pdf(os.path.join(os.getcwd(), "website", "static", "Resume.pdf"), height=830)
 
-st.image(os.path.join(os.getcwd(), "static", "Brandy.JPG"), width=300)
+st.image(os.path.join(os.getcwd(), "website", "static", "Brandy.JPG"), width=300)
