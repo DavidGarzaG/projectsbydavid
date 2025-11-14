@@ -55,4 +55,4 @@ COPY . .
 EXPOSE 80
 
 # Run the application.
-CMD python3 -m streamlit run website/main.py --server.address=0.0.0.0 --server.port=80
+CMD python3 -m streamlit run website/main.py
