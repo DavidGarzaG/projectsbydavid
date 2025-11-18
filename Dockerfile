@@ -51,7 +51,7 @@ RUN --mount=type=cache,target=/root/.cache/pip \
 COPY . .
 
 # Expose the port that the application listens on.
-EXPOSE 80
+EXPOSE 8501
 
 # Run the application.
 CMD python3 -m streamlit run website/main.py
