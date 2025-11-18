@@ -51,7 +51,6 @@ RUN --mount=type=cache,target=/root/.cache/pip \
 COPY . .
 
 # Expose the port that the application listens on.
-# EXPOSE 8501
 EXPOSE 80
 
 # Run the application.

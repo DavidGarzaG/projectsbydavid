@@ -8,6 +8,6 @@ streamlit-pdf==1.0.8
 streamlit-webrtc==0.63.11
 # Linting
 ruff==0.11.12
-pyright==1.1.401
+pyright==1.1.407
 # For commits
 pre_commit==4.2.0
