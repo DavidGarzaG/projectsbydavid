@@ -102,6 +102,12 @@ def video_frame_callback(frame):
 
 st.header("Look at me!")
 
+st.write(
+    """
+    This is a quick demonstration of Google's Mediapipe hand landmarker recognition.
+"""
+)
+
 ctx = webrtc_streamer(
     key="hand-landmarker",
     mode=WebRtcMode.SENDRECV,
@@ -109,5 +115,3 @@ ctx = webrtc_streamer(
     media_stream_constraints={"video": True, "audio": False},
     async_processing=True,
 )
-
-st.header("Hand Landmarker with MediaPipe")
