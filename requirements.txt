@@ -2,6 +2,8 @@
 av
 opencv-python
 streamlit
+boto3==1.41.0
+botocore==1.41.0
 numpy==1.26.4
 mediapipe==0.10.18
 streamlit-pdf==1.0.8
