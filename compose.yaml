@@ -11,8 +11,13 @@ services:
   server:
     build:
       context: .
+    environment:
+      - AWS_DEFAULT_REGION=us-east-1
     ports:
       - 8501:8501
+      - 80:80
+    volumes:
+      - ~/.aws:/root/.aws:ro
     develop:
       watch:
         - action: rebuild
