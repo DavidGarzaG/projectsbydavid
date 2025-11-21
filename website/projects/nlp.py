@@ -3,25 +3,18 @@ import time
 import boto3
 import streamlit as st
 
+from website.scripts.rag import (
+    construct_metadata_filter,
+    extract_entities,
+    improving_query,
+)
+
 st.title("RAG Pipeline Implementation")
 
 
 client = boto3.client("bedrock-agent-runtime", region_name="us-east-1")
 KNOWLEDGE_BASE_ID = "DJ31JD5YCZ"
 model_arn = "arn:aws:bedrock:us-east-1::foundation-model/amazon.nova-pro-v1:0"
-
-# This is the predefined template (with slight modifications) that came with "Test Knowledge Base" in AWS.
-# prompt_template = (
-#     "You should always answer in the same language as the question.\n" # This is my only modification
-#     "A chat between a curious User and an artificial intelligence Bot. The Bot gives helpful, detailed, and polite answers to the User's questions.\n"
-#     "In this session, the model has access to set of search results and a user's question, your job is to answer the user's question using only information from the search results.\n"
-#     "If the search results do not contain information that can answer the question, please respond with 'Sorry I could not find an exact answer to the question'.\n"
-#     "Now, below is a list of texts retrieved for user's question. Read them carefully and then follow my instructions: \n"
-#     "$search_results$\n\n"
-#     "Using the information from above search results to provide answer to user's question.\n"
-#     "Here is the user's query:\n"
-#     "Question: $input$"
-# )
 
 prompt_template = (
     "Use the following retrieved elevator specs to answer the question. You should always answer in the same language as the question.\n"
@@ -31,7 +24,17 @@ prompt_template = (
 )
 
 
-def retrieve_and_generate(query, model_arn, top_k=5, prompt_template=None):
+def retrieve_and_generate(query, model_arn, top_k=6, prompt_template=None):
+    query = improving_query(query)
+
+    # Adding a filter.
+    extracted_entities = extract_entities(query)
+    metadata_filter = construct_metadata_filter(extracted_entities)
+
+    # If there is only have one filter, the filter goes without the andAll. I'll leave this here for now
+    if len(metadata_filter["andAll"]) < 2:
+        metadata_filter = metadata_filter["andAll"][0]
+
     # prompt_template is optional, you could pass your own prompt design
     request_body = {
         "input": {"text": query},
@@ -41,7 +44,10 @@ def retrieve_and_generate(query, model_arn, top_k=5, prompt_template=None):
                 "knowledgeBaseId": KNOWLEDGE_BASE_ID,
                 "modelArn": model_arn,
                 "retrievalConfiguration": {
-                    "vectorSearchConfiguration": {"numberOfResults": top_k}
+                    "vectorSearchConfiguration": {
+                        "numberOfResults": top_k,
+                        "filter": metadata_filter,
+                    }
                 },
             },
         },
@@ -89,7 +95,7 @@ if prompt := st.chat_input("¿Que quieres saber de Eco Elevadores?"):
     with st.chat_message("assistant"):
         response = st.write_stream(
             retrieve_and_generate(
-                prompt, model_arn=model_arn, top_k=5, prompt_template=prompt_template
+                prompt, model_arn=model_arn, top_k=6, prompt_template=prompt_template
             )
         )
 
