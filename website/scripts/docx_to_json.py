@@ -79,7 +79,7 @@ def recursive_docx_to_json_with_metadata(
 if __name__ == "__main__":
     # Harcoded because its just an example. Won't be using this for now.
     path_to_documents = os.path.join(
-        os.getcwd(), "../eco_elevadores/Eco_Elevadores_PVE/"
+        os.getcwd(), "../../eco_elevadores/Eco_Elevadores_PVE/"
     )
     path = "info.json"
 
