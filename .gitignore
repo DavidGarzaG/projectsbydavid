@@ -16,3 +16,6 @@
 
 # Mac things
 .DS_Store
+
+# Pycache
+__pycache__/
