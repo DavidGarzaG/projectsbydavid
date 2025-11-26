@@ -35,8 +35,10 @@ class ExtractedEntities(BaseModel):
         return unique_entities
 
 
-###
+list_of_valid_filter_values = ["Elevador PVE 30", "Elevador PVE 37", "Elevador PVE 52"]
 
+
+###
 extracting_instructions = """
     The name of the elevator in spanish following this format: 'Elevador <model-name> <model-number>'.
     The 'E' in 'Elevador' is always uppercase.
@@ -90,14 +92,13 @@ def extract_entities(text):
             break
 
     if json_entities:
-        return ExtractedEntities.parse_obj(json_entities)
+        return ExtractedEntities.model_validate(json_entities)
     else:
         print("No entities found in the response.")
         return None
 
 
 ### Construct a metadata filter
-# I'll leave this function as is in case I want to expand on this to add to the andAll or add the orAll.
 def construct_metadata_filter(extracted_entities):
     if not extracted_entities or not extracted_entities.entities:
         return None
@@ -110,18 +111,21 @@ def construct_metadata_filter(extracted_entities):
             {"equals": {"key": "Elevator", "value": entity.Elevator}}
         )
 
-    return metadata_filter if metadata_filter["andAll"] else None
-
-
-### Create the main function
-# TODO: Should add some way to verify that the entity is one of the recognized entities in the .json file.
-def process_query(text):
-    extracted_entities = extract_entities(text)
-    metadata_filter = construct_metadata_filter(extracted_entities)
-
     # If there is only have one filter, the filter goes without the andAll. I'll leave this here for now
     if len(metadata_filter["andAll"]) < 2:
         metadata_filter = metadata_filter["andAll"][0]
+
+    # Assuring the filter is valid.
+    if metadata_filter["equals"]["value"] not in list_of_valid_filter_values:
+        metadata_filter = None
+
+    return metadata_filter
+
+
+### Create the main function
+def process_query(text):
+    extracted_entities = extract_entities(text)
+    metadata_filter = construct_metadata_filter(extracted_entities)
 
     response = bedrock_agent_runtime.retrieve(
         knowledgeBaseId=kb_id,
@@ -130,6 +134,7 @@ def process_query(text):
         },
         retrievalQuery={"text": text},
     )
+
     return response
 
 

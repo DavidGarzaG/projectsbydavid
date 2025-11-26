@@ -16,6 +16,8 @@ client = boto3.client("bedrock-agent-runtime", region_name="us-east-1")
 KNOWLEDGE_BASE_ID = "DJ31JD5YCZ"
 model_arn = "arn:aws:bedrock:us-east-1::foundation-model/amazon.nova-pro-v1:0"
 
+session_id = None
+
 prompt_template = (
     "Use the following retrieved elevator specs to answer the question. You should always answer in the same language as the question.\n"
     "Specs:\n"
@@ -25,15 +27,18 @@ prompt_template = (
 
 
 def retrieve_and_generate(query, model_arn, top_k=6, prompt_template=None):
+    # Need the session id
+    global session_id
+
     query = improving_query(query)
 
     # Adding a filter.
     extracted_entities = extract_entities(query)
     metadata_filter = construct_metadata_filter(extracted_entities)
 
-    # If there is only have one filter, the filter goes without the andAll. I'll leave this here for now
-    if len(metadata_filter["andAll"]) < 2:
-        metadata_filter = metadata_filter["andAll"][0]
+    # # If there is only have one filter, the filter goes without the andAll. I'll leave this here for now
+    # if len(metadata_filter["andAll"]) < 2:
+    #     metadata_filter = metadata_filter["andAll"][0]
 
     # prompt_template is optional, you could pass your own prompt design
     request_body = {
@@ -46,12 +51,20 @@ def retrieve_and_generate(query, model_arn, top_k=6, prompt_template=None):
                 "retrievalConfiguration": {
                     "vectorSearchConfiguration": {
                         "numberOfResults": top_k,
-                        "filter": metadata_filter,
+                        # "filter": metadata_filter,
                     }
                 },
             },
         },
     }
+
+    if metadata_filter is not None:
+        request_body["retrieveAndGenerateConfiguration"]["knowledgeBaseConfiguration"][
+            "retrievalConfiguration"
+        ]["vectorSearchConfiguration"]["filter"] = metadata_filter
+
+    if session_id is not None:
+        request_body["sessionId"] = session_id
 
     # If you have a custom prompt template
     if prompt_template is not None:
@@ -60,6 +73,9 @@ def retrieve_and_generate(query, model_arn, top_k=6, prompt_template=None):
         ] = {"promptTemplate": {"textPromptTemplate": prompt_template}}
 
     response = client.retrieve_and_generate(**request_body)
+
+    # Store the session Id for the interaction.
+    session_id = response["sessionId"]
 
     for word in response["output"]["text"].split():
         yield word + " "
