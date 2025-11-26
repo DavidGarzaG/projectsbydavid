@@ -16,10 +16,11 @@ client = boto3.client("bedrock-agent-runtime", region_name="us-east-1")
 KNOWLEDGE_BASE_ID = "DJ31JD5YCZ"
 model_arn = "arn:aws:bedrock:us-east-1::foundation-model/amazon.nova-pro-v1:0"
 
-session_id = None
-
 prompt_template = (
     "Use the following retrieved elevator specs to answer the question. You should always answer in the same language as the question.\n"
+    "If you do not find the information required ask for clarification of the question."
+    "Do not give information if you do not have textual information about it."
+    "If available, give the name of the document from where you get the information."
     "Specs:\n"
     "$search_results$\n\n"
     "Question: $input$"
@@ -27,18 +28,11 @@ prompt_template = (
 
 
 def retrieve_and_generate(query, model_arn, top_k=6, prompt_template=None):
-    # Need the session id
-    global session_id
-
     query = improving_query(query)
 
     # Adding a filter.
     extracted_entities = extract_entities(query)
     metadata_filter = construct_metadata_filter(extracted_entities)
-
-    # # If there is only have one filter, the filter goes without the andAll. I'll leave this here for now
-    # if len(metadata_filter["andAll"]) < 2:
-    #     metadata_filter = metadata_filter["andAll"][0]
 
     # prompt_template is optional, you could pass your own prompt design
     request_body = {
@@ -51,20 +45,22 @@ def retrieve_and_generate(query, model_arn, top_k=6, prompt_template=None):
                 "retrievalConfiguration": {
                     "vectorSearchConfiguration": {
                         "numberOfResults": top_k,
-                        # "filter": metadata_filter,
                     }
                 },
             },
         },
     }
 
+    # Add previous metadata_filter if it is None.
+    if metadata_filter is None and "metadata_filter" in st.session_state:
+        metadata_filter = st.session_state["metadata_filter"]
+
+    # Add the metadata_filter to the request body if there is one.
     if metadata_filter is not None:
         request_body["retrieveAndGenerateConfiguration"]["knowledgeBaseConfiguration"][
             "retrievalConfiguration"
         ]["vectorSearchConfiguration"]["filter"] = metadata_filter
-
-    if session_id is not None:
-        request_body["sessionId"] = session_id
+        st.session_state["metadata_filter"] = metadata_filter
 
     # If you have a custom prompt template
     if prompt_template is not None:
@@ -72,10 +68,15 @@ def retrieve_and_generate(query, model_arn, top_k=6, prompt_template=None):
             "generationConfiguration"
         ] = {"promptTemplate": {"textPromptTemplate": prompt_template}}
 
+    # If there is session id
+    if "session_id" in st.session_state:
+        request_body["sessionId"] = st.session_state["session_id"]
+
+    # Make the call to the LLM
     response = client.retrieve_and_generate(**request_body)
 
     # Store the session Id for the interaction.
-    session_id = response["sessionId"]
+    st.session_state["session_id"] = response["sessionId"]
 
     for word in response["output"]["text"].split():
         yield word + " "
